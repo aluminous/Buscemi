@@ -177,6 +177,7 @@ public class CameraPreview extends ViewGroup implements SurfaceHolder.Callback, 
     
     public void startFaceDetection() {
         //mCamera.startFaceDetection();
+    	Log.i(TAG, "Max faces: " + mCamera.getParameters().getMaxNumDetectedFaces());
     	Log.i(TAG, "Forcing SW face detection...");
     	
     	// Replicates functionality of Camera.startFaceDetection() via reflection but specifies type=1 (S/W mode) instead of type=0.  
