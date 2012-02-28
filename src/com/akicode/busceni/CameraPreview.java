@@ -12,6 +12,9 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.List;
 
 /**
@@ -171,6 +174,42 @@ public class CameraPreview extends ViewGroup implements SurfaceHolder.Callback, 
         
         return optimalSize;
     }
+    
+    public void startFaceDetection() {
+        //mCamera.startFaceDetection();
+    	Log.i(TAG, "Forcing SW face detection...");
+    	
+    	// Replicates functionality of Camera.startFaceDetection() via reflection but specifies type=1 (S/W mode) instead of type=0.  
+    	try {
+    		Field detectionRunning = mCamera.getClass().getDeclaredField("mFaceDetectionRunning");
+    		detectionRunning.setAccessible(true);
+    		if (detectionRunning.getBoolean(mCamera)) {
+    			Log.e(TAG, "Face detection already running");
+    			return;
+    		}
+    		
+			Method nativeStart = mCamera.getClass().getDeclaredMethod("_startFaceDetection", new Class[]{int.class});
+			nativeStart.setAccessible(true);
+			nativeStart.invoke(mCamera, 1);
+			
+			detectionRunning.set(mCamera, true);
+		} catch (NoSuchMethodException e) {
+			// TODO Auto-generated catch block
+			Log.e(TAG, "Failed to start face detection", e);
+		} catch (IllegalArgumentException e) {
+			// TODO Auto-generated catch block
+			Log.e(TAG, "Failed to start face detection", e);
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			Log.e(TAG, "Failed to start face detection", e);
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			Log.e(TAG, "Failed to start face detection", e);
+		} catch (NoSuchFieldException e) {
+			// TODO Auto-generated catch block
+			Log.e(TAG, "Failed to start face detection", e);
+		}
+    }
 
     public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
         // Now that the size is known, set up the camera parameters and begin
@@ -181,12 +220,13 @@ public class CameraPreview extends ViewGroup implements SurfaceHolder.Callback, 
 
         mCamera.setParameters(parameters);
         mCamera.startPreview();
-        mCamera.startFaceDetection();
     }
 
 	@Override
 	public void onFaceDetection(Face[] faces, Camera camera) {
-		Log.i(TAG, "FACE!!!!!!!!!!!!");
+		for (Face f : faces) {
+			Log.i(TAG, "Face: " + f.leftEye.toString());
+		}
 	}
 
 }
